@@ -8,7 +8,7 @@ export default {
     "Create Quizz App On History",
     "Create Login Signup Screen",
   ],
-  HERO_HEADING: "What do you want to build?",
+  HERO_HEADING: "What do you want to ",
   HERO_DESC: "Prompt, run, edit, and deploy full-stack web apps.",
   INPUT_PLACEHOLDER: "What you want to build?",
   SIGNIN_HEADING: "Continue With BuildIX",
