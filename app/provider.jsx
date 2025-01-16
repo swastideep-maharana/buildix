@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import Header from "@/components/custom/Header";
 
 const Provider = ({ children }) => {
   return (
@@ -11,6 +12,7 @@ const Provider = ({ children }) => {
         enableSystem
         disableTransitionOnChange
       >
+         <Header />
         {children}
       </NextThemesProvider>
     </div>
