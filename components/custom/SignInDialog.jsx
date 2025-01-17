@@ -13,9 +13,13 @@ import { useGoogleLogin } from "@react-oauth/google";
 
 import axios from "axios";
 import { UserDetailContext } from "@/context/UserDetailContext";
+import { useMutation } from "convex/react";
+import uuid4 from "uuid4";
+import { api } from "@/convex/_generated/api";
 
 const SignInDialog = ({ openDialog, closeDialog }) => {
   const { userDetail, setUserDetail } = useContext(UserDetailContext);
+  const createUserMutation = useMutation(api.users.CreateUser); // Corrected API path
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -32,8 +36,20 @@ const SignInDialog = ({ openDialog, closeDialog }) => {
         );
 
         console.log("User Info:", userInfo.data);
-        // Handle user information (e.g., save it to the state or backend)
+        const user = userInfo.data;
         setUserDetail(userInfo.data);
+
+        await createUserMutation({
+          name: user?.name,
+          email: user?.email,
+          picture: user?.picture,
+          uid: uuid4(),
+        });
+
+        if (typeof window !== "undefined") {
+          localStorage.setItem("user", JSON.stringify(user));
+        }
+
         closeDialog(false);
       } catch (error) {
         console.error("Error fetching user info:", error);
@@ -54,14 +70,13 @@ const SignInDialog = ({ openDialog, closeDialog }) => {
               <h2 className="font-bold text-2xl text-center text-white">
                 {Lookup.SIGNIN_HEADING}
               </h2>
-              <p className="mt-2 text-center ">{Lookup.SIGNIN_SUBHEADING}</p>
+              <p className="mt-2 text-center">{Lookup.SIGNIN_SUBHEADING}</p>
               <Button
                 className="bg-blue-500 text-white hover:bg-blue-400 mt-3"
                 onClick={googleLogin}
               >
                 Sign In With Google
               </Button>
-
               <p>{Lookup?.SIGNIn_AGREEMENT_TEXT}</p>
             </div>
           </DialogDescription>
