@@ -10,36 +10,40 @@ import { useConvex, useMutation } from "convex/react";
 import { ArrowRight, Link, Loader2Icon } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import React, { use, useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useSidebar } from "../ui/sidebar";
 
 const ChatView = () => {
   const { id } = useParams();
   const convex = useConvex();
-  const { userDetail, setUserDetail } = useContext(UserDetailContext);
+  const { userDetail } = useContext(UserDetailContext);
   const { messages, setMessages } = useContext(MessagesContext);
 
-  const [userInput, setUserInput] = useState();
-
+  const [userInput, setUserInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const UpdateMessages = useMutation(api.workspace.UpdateMessages);
 
+  const UpdateMessages = useMutation(api.workspace.UpdateMessages);
+  const { toggleSidebar } = useSidebar();
   useEffect(() => {
-    id && GetWorkspaceData();
+    if (id) GetWorkspaceData();
   }, [id]);
 
   const GetWorkspaceData = async () => {
-    const result = await convex.query(api.workspace.GetWorkspace, {
-      workspaceId: id,
-    });
-    setMessages(result?.messages);
-    console.log(result);
+    try {
+      const result = await convex.query(api.workspace.GetWorkspace, {
+        workspaceId: id,
+      });
+      setMessages(result?.messages || []); // Ensure messages is always an array
+    } catch (error) {
+      console.error("Error fetching workspace data:", error);
+    }
   };
 
   useEffect(() => {
-    if (messages?.length > 0) {
-      const role = messages[messages.length - 1].role;
-      if (role == "user") {
+    if (Array.isArray(messages) && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage?.role === "user") {
         GetAiResponse();
       }
     }
@@ -47,22 +51,28 @@ const ChatView = () => {
 
   const GetAiResponse = async () => {
     setLoading(true);
-    const PROMPT = JSON.stringify(messages) + Prompt.CHAT_PROMPT;
-    const result = await axios.post("/api/ai-chat", {
-      prompt: PROMPT,
-    });
-    console.log(result.data.result);
-    const aiResp = {
-      role: "ai",
-      content: result.data.result,
-    };
-    setMessages((prev) => [...prev, aiResp]);
+    try {
+      const PROMPT = JSON.stringify(messages) + Prompt.CHAT_PROMPT;
+      const result = await axios.post("/api/ai-chat", {
+        prompt: PROMPT,
+      });
 
-    await UpdateMessages({
-      messages: [...messages, aiResp],
-      workspaceId: id,
-    });
-    setLoading(false);
+      const aiResp = {
+        role: "ai",
+        content: result.data.result,
+      };
+      const updatedMessages = [...messages, aiResp];
+      setMessages(updatedMessages);
+
+      await UpdateMessages({
+        messages: updatedMessages,
+        workspaceId: id,
+      });
+    } catch (error) {
+      console.error("Error fetching AI response:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onGenerate = (input) => {
@@ -78,29 +88,34 @@ const ChatView = () => {
 
   return (
     <div className="relative h-[85vh] flex flex-col">
-      <div className="flex-1 overflow-y-scroll scrollbar-hide">
-        {messages?.map((msg, index) => (
-          <div
-            key={index}
-            className="p-3 rounded-lg mb-2 flex gap-2 items-center leading-7"
-            style={{
-              backgroundColor: Colors.BACKGROUND,
-            }}
-          >
-            {msg?.role == "user" && (
-              <Image
-                src={userDetail?.picture}
-                alt="userImage"
-                width={35}
-                height={35}
-                className="rounded-full"
-              />
-            )}
-            <ReactMarkdown className="flex flex-col">
-              {msg.content}
-            </ReactMarkdown>
-          </div>
-        ))}
+      {/* Messages */}
+      <div className="flex-1 overflow-y-scroll scrollbar-hide px-5">
+        {Array.isArray(messages) && messages.length > 0 ? (
+          messages.map((msg, index) => (
+            <div
+              key={index}
+              className="p-3 rounded-lg mb-2 flex gap-2 items-center leading-7"
+              style={{
+                backgroundColor: Colors.BACKGROUND,
+              }}
+            >
+              {msg?.role === "user" && (
+                <Image
+                  src={userDetail?.picture}
+                  alt="User"
+                  width={35}
+                  height={35}
+                  className="rounded-full"
+                />
+              )}
+              <ReactMarkdown className="flex flex-col">
+                {msg?.content || "No content available"}
+              </ReactMarkdown>
+            </div>
+          ))
+        ) : (
+          <div className="p-3 text-gray-500 text-center">No messages yet.</div>
+        )}
         {loading && (
           <div
             className="p-3 rounded-lg mb-2 flex gap-2 items-center"
@@ -112,29 +127,41 @@ const ChatView = () => {
         )}
       </div>
 
-      {/* input section */}
-      <div
-        className="p-6 border shadow-lg rounded-2xl max-w-xl w-full"
-        style={{
-          backgroundColor: Colors.BACKGROUND,
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <textarea
-            placeholder={Lookup.INPUT_PLACEHOLDER}
-            value={userInput}
-            onChange={(event) => setUserInput(event.target.value)}
-            className="outline-none bg-transparent w-full h-32 max-h-56 resize-none"
+      <div className="flex gap-2 items-end">
+        {userDetail && (
+          <Image
+            src={userDetail?.picture}
+            className="rounded-full cursor-pointer hover:scale-110 transition-transform duration-300"
+            onClick={toggleSidebar}
+            alt="User"
+            width={35}
+            height={35}
           />
-          {userInput && (
-            <ArrowRight
-              onClick={() => onGenerate(userInput)}
-              className="bg-blue-500 text-white p-2 h-10 w-10 rounded-full cursor-pointer hover:bg-blue-600 transition-transform transform hover:scale-110"
+        )}
+        {/* Input Section */}
+        <div
+          className="p-6 border shadow-lg rounded-2xl max-w-xl w-full"
+          style={{
+            backgroundColor: Colors.BACKGROUND,
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <textarea
+              placeholder={Lookup.INPUT_PLACEHOLDER}
+              value={userInput}
+              onChange={(event) => setUserInput(event.target.value)}
+              className="outline-none bg-transparent w-full h-32 max-h-56 resize-none"
             />
-          )}
-        </div>
-        <div className="flex justify-end mt-3">
-          <Link className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" />
+            {userInput && (
+              <ArrowRight
+                onClick={() => onGenerate(userInput)}
+                className="bg-blue-500 text-white p-2 h-10 w-10 rounded-full cursor-pointer hover:bg-blue-600 transition-transform transform hover:scale-110"
+              />
+            )}
+          </div>
+          <div className="flex justify-end mt-3">
+            <Link className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" />
+          </div>
         </div>
       </div>
     </div>
