@@ -13,9 +13,7 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body>
         <ConvexClientProvider>
-        <Provider>
-          {children}
-        </Provider>
+          <Provider>{children}</Provider>
         </ConvexClientProvider>
       </body>
     </html>
