@@ -4,11 +4,14 @@ import { UserDetailContext } from "@/context/UserDetailContext";
 import { api } from "@/convex/_generated/api";
 import Colors from "@/data/Colors";
 import Lookup from "@/data/Lookup";
-import { useConvex } from "convex/react";
-import { Link } from "lucide-react";
+import Prompt from "@/data/Prompt";
+import axios from "axios";
+import { useConvex, useMutation } from "convex/react";
+import { ArrowRight, Link, Loader2Icon } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import React, { use, useContext, useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 const ChatView = () => {
   const { id } = useParams();
@@ -17,6 +20,10 @@ const ChatView = () => {
   const { messages, setMessages } = useContext(MessagesContext);
 
   const [userInput, setUserInput] = useState();
+
+  const [loading, setLoading] = useState(false);
+  const UpdateMessages = useMutation(api.workspace.UpdateMessages);
+
   useEffect(() => {
     id && GetWorkspaceData();
   }, [id]);
@@ -28,13 +35,54 @@ const ChatView = () => {
     setMessages(result?.messages);
     console.log(result);
   };
+
+  useEffect(() => {
+    if (messages?.length > 0) {
+      const role = messages[messages.length - 1].role;
+      if (role == "user") {
+        GetAiResponse();
+      }
+    }
+  }, [messages]);
+
+  const GetAiResponse = async () => {
+    setLoading(true);
+    const PROMPT = JSON.stringify(messages) + Prompt.CHAT_PROMPT;
+    const result = await axios.post("/api/ai-chat", {
+      prompt: PROMPT,
+    });
+    console.log(result.data.result);
+    const aiResp = {
+      role: "ai",
+      content: result.data.result,
+    };
+    setMessages((prev) => [...prev, aiResp]);
+
+    await UpdateMessages({
+      messages: [...messages, aiResp],
+      workspaceId: id,
+    });
+    setLoading(false);
+  };
+
+  const onGenerate = (input) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        content: input,
+      },
+    ]);
+    setUserInput("");
+  };
+
   return (
     <div className="relative h-[85vh] flex flex-col">
-      <div className="flex-1 overflow-y-scroll ">
+      <div className="flex-1 overflow-y-scroll scrollbar-hide">
         {messages?.map((msg, index) => (
           <div
             key={index}
-            className="p-3 rounded-lg mb-2 flex gap-2 items-start"
+            className="p-3 rounded-lg mb-2 flex gap-2 items-center leading-7"
             style={{
               backgroundColor: Colors.BACKGROUND,
             }}
@@ -48,9 +96,20 @@ const ChatView = () => {
                 className="rounded-full"
               />
             )}
-            <h2>{msg.content}</h2>
+            <ReactMarkdown className="flex flex-col">
+              {msg.content}
+            </ReactMarkdown>
           </div>
         ))}
+        {loading && (
+          <div
+            className="p-3 rounded-lg mb-2 flex gap-2 items-center"
+            style={{ backgroundColor: Colors.BACKGROUND }}
+          >
+            <Loader2Icon className="animate-spin" />
+            <h2>Generating response...</h2>
+          </div>
+        )}
       </div>
 
       {/* input section */}
@@ -63,6 +122,7 @@ const ChatView = () => {
         <div className="flex items-center gap-3">
           <textarea
             placeholder={Lookup.INPUT_PLACEHOLDER}
+            value={userInput}
             onChange={(event) => setUserInput(event.target.value)}
             className="outline-none bg-transparent w-full h-32 max-h-56 resize-none"
           />
