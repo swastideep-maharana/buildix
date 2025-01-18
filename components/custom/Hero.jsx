@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
 const Hero = () => {
-  const [userInput, setUserInput] = useState();
+  const [userInput, setUserInput] = useState("");
   const { messages, setMessages } = useContext(MessagesContext);
   const { userDetail, setUserDetail } = useContext(UserDetailContext);
   const [openDialog, setOpenDialog] = useState(false);
@@ -68,7 +68,6 @@ const Hero = () => {
               placeholder={Lookup.INPUT_PLACEHOLDER}
               onChange={(event) => setUserInput(event.target.value)}
               className="outline-none bg-transparent w-full h-32 max-h-56 resize-none text-gray-900 dark:text-white"
-              // style={{ backgroundColor: Colors.BACKGROUND }}
             />
             {userInput && (
               <ArrowRight

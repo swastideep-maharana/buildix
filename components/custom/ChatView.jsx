@@ -144,27 +144,15 @@ const ChatView = () => {
         )}
       </div>
 
-      <div className="flex gap-2 items-end">
-        {userDetail && (
-          <Image
-            src={userDetail?.picture}
-            className="rounded-full cursor-pointer hover:scale-110 transition-transform duration-300"
-            onClick={() => {
-              toggleSidebar(); // Close the sidebar when the image is clicked
-            }}
-            alt="User"
-            width={35}
-            height={35}
-          />
-        )}
-        {/* Input Section */}
+      {/* Input Section */}
+      <div className="flex gap-2 items-center">
         <div
           className="p-6 border shadow-lg rounded-2xl max-w-xl w-full"
           style={{
             backgroundColor: Colors.BACKGROUND,
           }}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 relative">
             <textarea
               placeholder={Lookup.INPUT_PLACEHOLDER}
               value={userInput}
@@ -178,10 +166,29 @@ const ChatView = () => {
               />
             )}
           </div>
-          <div className="flex justify-end mt-3">
-            <Link className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" />
-          </div>
         </div>
+      </div>
+
+      {/* User Profile Image Below the Input Box with Text */}
+      <div className="flex justify-center mt-4 items-center gap-2">
+        {userDetail && (
+          <>
+            <Image
+              src={userDetail?.picture}
+              alt="User"
+              width={45}
+              height={45}
+              className="rounded-full cursor-pointer hover:scale-110 transition-transform duration-300"
+              onClick={() => toggleSidebar()} // Close the sidebar when the image is clicked
+            />
+            <span
+              className="text-sm text-gray-200 cursor-pointer hover:underline"
+              onClick={() => toggleSidebar()}
+            >
+              Click to open sidebar
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
