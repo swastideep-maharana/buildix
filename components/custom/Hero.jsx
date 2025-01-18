@@ -20,22 +20,34 @@ const Hero = () => {
   const router = useRouter();
 
   const onGenerate = async (input) => {
-    if (!userDetail?.name) {
-      setOpenDialog(true);
+    // Check if userDetail is available and has a valid _id
+    if (!userDetail?.name || !userDetail?._id) {
+      setOpenDialog(true); // Show sign-in dialog if user is not authenticated
       return;
     }
+
     const msg = {
       role: "user",
       content: input,
     };
+
+    // Set the message context
     setMessages(msg);
 
-    const workspaceId = await CreateWorkspace({
-      user: userDetail._id,
-      messages: [msg],
-    });
-    console.log(workspaceId);
-    router.push(`/workspace/` + workspaceId);
+    try {
+      // Create workspace with the user ID and messages
+      const workspaceId = await CreateWorkspace({
+        user: userDetail._id, // Ensure the user ID is passed
+        messages: [msg],
+      });
+
+      console.log("Workspace created:", workspaceId);
+
+      // Redirect to the newly created workspace
+      router.push(`/workspace/${workspaceId}`);
+    } catch (error) {
+      console.error("Error creating workspace:", error);
+    }
   };
 
   return (
