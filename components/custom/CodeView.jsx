@@ -15,6 +15,7 @@ import { api } from "@/convex/_generated/api";
 import { useConvex, useMutation } from "convex/react";
 import { useParams } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
+import { UserDetailContext } from "@/context/UserDetailContext";
 
 const CodeView = () => {
   const { id } = useParams();
@@ -24,9 +25,13 @@ const CodeView = () => {
   const UpdateFiles = useMutation(api.workspace.UpdateFiles);
   const convex = useConvex();
   const [loading, setLoading] = useState(false);
+  const UpdateTokens = useMutation(api.users.UpdateToken);
+  const { userDetail } = useContext(UserDetailContext);
 
   useEffect(() => {
-    id && GetFiles();
+    if (id) {
+      GetFiles();
+    }
   }, [id]);
 
   const GetFiles = async () => {
@@ -63,7 +68,22 @@ const CodeView = () => {
       workspaceId: id,
       files: aiResp?.files,
     });
+
+    const token =
+      Number(userDetail?.token) - Number(countToken(JSON.stringify(aiResp)));
+    await UpdateTokens({
+      user: userDetail?._id, // Corrected to 'user' instead of 'userId'
+      token: token,  // Ensure token is a valid number
+    });
+
     setLoading(false);
+  };
+
+  // Define countToken function
+  const countToken = (text) => {
+    // Assuming this is a function that counts tokens in a string
+    // Adjust the implementation as needed
+    return text.length; // Example, can be replaced with actual token counting logic
   };
 
   return (

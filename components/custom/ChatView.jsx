@@ -14,6 +14,13 @@ import React, { useContext, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useSidebar } from "../ui/sidebar";
 
+const countToken = (inputText) => {
+  return inputText
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word).length;
+};
+
 const ChatView = () => {
   const { id } = useParams();
   const convex = useConvex();
@@ -25,6 +32,8 @@ const ChatView = () => {
 
   const UpdateMessages = useMutation(api.workspace.UpdateMessages);
   const { toggleSidebar } = useSidebar();
+  const UpdateTokens = useMutation(api.users.UpdateToken);
+
   useEffect(() => {
     if (id) GetWorkspaceData();
   }, [id]);
@@ -62,11 +71,19 @@ const ChatView = () => {
         content: result.data.result,
       };
       const updatedMessages = [...messages, aiResp];
-      setMessages(updatedMessages);
+
+      setMessages((prev) => [...prev, aiResp]);
 
       await UpdateMessages({
         messages: updatedMessages,
         workspaceId: id,
+      });
+
+      const token =
+        Number(userDetail?.token) - Number(countToken(JSON.stringify(aiResp)));
+      await UpdateTokens({
+        user: userDetail?._id, // Corrected to 'user' instead of 'userId'
+        token: token,  // Ensure token is a valid number
       });
     } catch (error) {
       console.error("Error fetching AI response:", error);
