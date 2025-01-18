@@ -31,7 +31,7 @@ const ChatView = () => {
   const [loading, setLoading] = useState(false);
 
   const UpdateMessages = useMutation(api.workspace.UpdateMessages);
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar } = useSidebar(); // Sidebar toggle function
   const UpdateTokens = useMutation(api.users.UpdateToken);
 
   useEffect(() => {
@@ -83,7 +83,7 @@ const ChatView = () => {
         Number(userDetail?.token) - Number(countToken(JSON.stringify(aiResp)));
       await UpdateTokens({
         user: userDetail?._id, // Corrected to 'user' instead of 'userId'
-        token: token,  // Ensure token is a valid number
+        token: token, // Ensure token is a valid number
       });
     } catch (error) {
       console.error("Error fetching AI response:", error);
@@ -149,7 +149,9 @@ const ChatView = () => {
           <Image
             src={userDetail?.picture}
             className="rounded-full cursor-pointer hover:scale-110 transition-transform duration-300"
-            onClick={toggleSidebar}
+            onClick={() => {
+              toggleSidebar(); // Close the sidebar when the image is clicked
+            }}
             alt="User"
             width={35}
             height={35}

@@ -39,12 +39,12 @@ const Hero = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen w-screen relative px-4 bg-black dark:bg-gray-900">
+    <div className="flex items-center justify-center h-screen w-screen relative px-4">
       {/* Background Image with Black Overlay */}
-      <div 
+      <div
         className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
         style={{
-          backgroundImage: "url('/path/to/your-image.jpg')", // Add the image path here
+          backgroundImage: Colors.BACKGROUND, // Add the image path here
           backgroundColor: "rgba(0, 0, 0, 0.5)", // Black overlay with transparency
         }}
       ></div>
@@ -62,12 +62,13 @@ const Hero = () => {
         </div>
 
         {/* Input Section */}
-        <div className="p-6 border shadow-lg rounded-2xl w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <div className="p-6 border shadow-lg rounded-2xl w-full  border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <textarea
               placeholder={Lookup.INPUT_PLACEHOLDER}
               onChange={(event) => setUserInput(event.target.value)}
               className="outline-none bg-transparent w-full h-32 max-h-56 resize-none text-gray-900 dark:text-white"
+              // style={{ backgroundColor: Colors.BACKGROUND }}
             />
             {userInput && (
               <ArrowRight
@@ -87,7 +88,7 @@ const Hero = () => {
             <h2
               key={index}
               onClick={() => onGenerate(suggestion)}
-              className="p-2 px-4 border rounded-full text-gray-600 cursor-pointer bg-gray-100 hover:bg-blue-500 hover:text-white transition-all shadow-md dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-blue-500"
+              className="p-2 px-4 border rounded-full text-gray-600 cursor-pointer bg-black hover:bg-blue-500 hover:text-white transition-all shadow-md  dark:text-gray-300 dark:hover:bg-blue-500"
             >
               {suggestion}
             </h2>
